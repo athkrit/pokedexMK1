@@ -1,11 +1,19 @@
 package com.example.pokedex;
 
 import android.app.ProgressDialog;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,36 +22,39 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import me.sargunvohra.lib.pokekotlin.client.PokeApi;
-import me.sargunvohra.lib.pokekotlin.client.PokeApiClient;
-import me.sargunvohra.lib.pokekotlin.model.Ability;
-import me.sargunvohra.lib.pokekotlin.model.PokemonSpecies;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     ProgressDialog pd;
+    String nextpokemonpage = null;
+    JSONObject json = new JSONObject();
+    JSONArray pokemon = new JSONArray();
+    JSONObject pokemonJsonName = new JSONObject();
+
+    ArrayList<String> pokemonName = new ArrayList<String>();
+
+    SQLiteDatabase db;
+    public static String resultMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        new JsonTask().execute("https://pokeapi.co/api/v2/pokemon");
+        DB myDb = new DB(this);
+        db = myDb.getWritableDatabase();
 
+        long dummy = myDb.InsertData("PKM-dummy");
 
-    }
-    private class JsonTask extends AsyncTask<String, String, String> {
+        new CALLDATA().execute("https://pokeapi.co/api/v2/pokemon");
 
-        protected void onPreExecute() {
-            super.onPreExecute();
+//        TextView textView = findViewById(R.id.textView);
+//        textView.setText(resultMain);
 
-            pd = new ProgressDialog(MainActivity.this);
-            pd.setMessage("Please wait");
-            pd.setCancelable(false);
-            pd.show();
         }
+    public class CALLDATA extends AsyncTask<String, String, String> {
 
-        protected String doInBackground(String... params) {
+        public String doInBackground(String... params) {
 
 
             HttpURLConnection connection = null;
@@ -91,13 +102,41 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            if (pd.isShowing()){
-                pd.dismiss();
+        public void onPostExecute(String result) {
+            resultMain = result;
+            try {
+                json = new JSONObject(result.toString());
+                nextpokemonpage = json.getString("next");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            TextView textView = findViewById(R.id.textView);
-            textView.setText(result);
+            try {
+                json = new JSONObject(result);
+                pokemon = json.getJSONArray("results");
+                for(int i=0 ; i< pokemon.length() ; i++ ){
+                    pokemonJsonName = pokemon.getJSONObject(i);
+                    pokemonName.add(pokemonJsonName.getString("name"));
+
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycleView);
+            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            ArrayList<String> pokedel = new ArrayList<String>();
+
+            RecyclerV adapter = new RecyclerV(MainActivity.this,pokemonName);
+            recyclerView.setAdapter(adapter);
+
+//            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//                @Override
+//                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+//                    super.onScrolled(recyclerView, dx, dy);
+//                    if(dy > 0 ){
+//                    }
+//                }
+//            });
         }
     }
 }
