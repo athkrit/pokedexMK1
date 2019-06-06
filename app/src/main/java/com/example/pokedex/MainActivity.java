@@ -44,9 +44,9 @@ public class MainActivity extends AppCompatActivity {
         DB myDb = new DB(this);
         db = myDb.getWritableDatabase();
 
-        long dummy = myDb.InsertData("PKM-dummy");
+        myDb.InsertData("PKM-dummy");
 
-        new CALLDATA().execute("https://pokeapi.co/api/v2/pokemon");
+        new CALLDATA().execute("https://pokeapi.co/api/v2/pokemon?offset=0&limit=964");
 
 //        TextView textView = findViewById(R.id.textView);
 //        textView.setText(resultMain);

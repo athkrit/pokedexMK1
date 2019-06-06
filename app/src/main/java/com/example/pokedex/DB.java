@@ -13,9 +13,7 @@ import java.util.ArrayList;
 public class DB extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
     private static final String TABLE_NAME = "pokemonDelTable";
-
     private static final String collumname = "pokemonName";
-
 
     public long getProfilesCount() {
         SQLiteDatabase db = this.getReadableDatabase();
