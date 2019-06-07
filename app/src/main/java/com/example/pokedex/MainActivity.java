@@ -11,7 +11,12 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +35,6 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     ProgressDialog pd;
-    String nextpokemonpage = null;
     JSONObject json = new JSONObject();
     JSONArray pokemon = new JSONArray();
     JSONObject pokemonJsonName = new JSONObject();
@@ -38,7 +42,10 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> pokemonName = new ArrayList<String>();
 
     SQLiteDatabase db;
-    public static String resultMain;
+//    public static String resultMain;
+
+
+    Integer count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,22 +57,74 @@ public class MainActivity extends AppCompatActivity {
 
         myDb.InsertData("PKM-dummy");
 
-        new CALLDATA().execute("https://pokeapi.co/api/v2/pokemon?offset=20&limit=20");
+        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycleView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
-//        SharedPreferences editor = getPreferences( MODE_PRIVATE);
-//        Set<String> fetch = editor.getStringSet("pokeName", null);
-//        String[] PokemonFetch = fetch.toArray(new String[fetch.size()]);
-//        TextView textView = findViewById(R.id.textView);
-//        textView.setText(fetch.toArray().toString());
+        new CALLDATA().execute("https://pokeapi.co/api/v2/pokemon?offset=0&limit=20");
+
+//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                super.onScrollStateChanged(recyclerView, newState);
+//            }
 //
-//        for(int i = 0 ;i<=fetch.size();i++){
-//            pokemonName.add(PokemonFetch[i]);
-//        }
+//            @Override
+//            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+//                super.onScrolled(recyclerView, dx, dy);
+//                Log.e("DY",""+dy);
+//                if(dy>0){
+//                    if(count<=960) {
+//                        final GridLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 3);
+//                        recyclerView.setHasFixedSize(true);
+//                        int visibleItemCount = layoutManager.getChildCount();
+//                        int totalItemCount = layoutManager.getItemCount();
+//                        int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+//
+//                        if (true) {
+//                            Log.e("TAG", ""+visibleItemCount+" + "+pastVisibleItems+" + "+totalItemCount);
+//
+//                            if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+//                                Log.e("DY","load");
+//                            }
+//                        }
+//                        count += 20;
+//                        String urlnextpage = "https://pokeapi.co/api/v2/pokemon?offset=" + count.toString() + "&limit=20";
+//                        new CALLDATA().execute(urlnextpage);
+//                    }
+//                    else{
+//                        Toast.makeText(MainActivity.this, "No more pokemon", Toast.LENGTH_LONG).show();
+//                    }
+//                }
+//            }
+//        });
 
+        final Button buttonLoadmore = findViewById(R.id.buttonLoadmore);
+        buttonLoadmore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(count<=960) {
+                    count += 20;
+                    String urlnextpage = "https://pokeapi.co/api/v2/pokemon?offset=" + count.toString() + "&limit=20";
+                    new CALLDATA().execute(urlnextpage);
+                    final GridLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 1);
 
+                    if(count==960){
+                        buttonLoadmore.setVisibility(View.INVISIBLE);
+                    }
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "No more pokemon", Toast.LENGTH_LONG).show();
+                    buttonLoadmore.setVisibility(View.INVISIBLE);
+
+                }
+            }
+        });
     }
 
-    public class CALLDATA extends AsyncTask<String, String, String> {
+
+    public  class CALLDATA extends AsyncTask<String, String, String> {
+
+        private Object ViewTreeObserver;
 
         public String doInBackground(String... params) {
 
@@ -116,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPostExecute(String result) {
-            resultMain = result;
+            String nextpokemonpage = null;
             try {
                 json = new JSONObject(result.toString());
                 nextpokemonpage = json.getString("next");
@@ -143,39 +202,25 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < pokemonName.size(); i++) {
                 PokeN.add(pokemonName.get(i));
             }
-            RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycleView);
-            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+//            RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycleView);
             ArrayList<String> pokedel = new ArrayList<String>();
-
-            final GridLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 1);
-
+            final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycleView);
+            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
             RecyclerV adapter = new RecyclerV(MainActivity.this, pokemonName);
             recyclerView.setAdapter(adapter);
-            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                @Override
-                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                    super.onScrolled(recyclerView, dx, dy);
+            final GridLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 1);
 
-                    if (dy > 0) {
-                        int visibleItemCount = layoutManager.getChildCount();
-                        int totalItemCount = layoutManager.getItemCount();
-                        int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+//            recyclerView.setHasFixedSize(true);
+//            int visibleItemCount = layoutManager.getChildCount();
+//            int totalItemCount =   recyclerView.getAdapter().getItemCount();
+//            int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+//
+//                Log.e("TAG", ""+visibleItemCount+" + "+pastVisibleItems+" + "+totalItemCount);
+//
+//                if ((visibleItemCount + pastVisibleItems) >= totalItemCount)
+//                    Log.e("DY","load");
 
-                        if (2>1) {
-                            if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
-                                new CALLDATA().execute(nextpokemonpage);
-                            }
-                        }
-                    }
-                }
-            });
-
-            SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
-            editor.putStringSet("pokeName", PokeN);
-            editor.apply();
         }
     }
+
 }
-
-
-

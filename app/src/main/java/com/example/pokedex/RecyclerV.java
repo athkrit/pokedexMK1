@@ -28,6 +28,8 @@ public class RecyclerV extends RecyclerView.Adapter<RecyclerV.EXViewHolder> {
     View view;
     //    final DB myDb = new DB(context);
     SQLiteDatabase db;
+    int count=0;
+
 
     public class EXViewHolder extends RecyclerView.ViewHolder {
 
@@ -78,6 +80,7 @@ public class RecyclerV extends RecyclerView.Adapter<RecyclerV.EXViewHolder> {
                 }
             });
         }
+
     }
 
     public RecyclerV(Context context, ArrayList<String> pokemonName) {
